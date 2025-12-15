@@ -1,6 +1,5 @@
 import { pool } from "../config/db.js";
 
-// Crear proyecto
 export const createProject = async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -19,26 +18,33 @@ export const createProject = async (req, res) => {
 export const getProjects = async (req, res) => {
   try {
     const [rows] = await pool.execute(`
-      SELECT 
+      SELECT
         p.id AS project_id,
         p.name AS project_name,
         p.description,
-        m.id AS material_id,
+
+        pm.material_id,
+        pm.quantity AS assigned_quantity,
+
         m.name AS material_name,
-        m.quantity,
         m.unit
       FROM projects p
-      LEFT JOIN materials m ON p.id = m.project_id
+      LEFT JOIN project_materials pm 
+        ON pm.project_id = p.id
+      LEFT JOIN materials m 
+        ON m.id = pm.material_id
+      ORDER BY p.id
     `);
 
     const projects = {};
+
     rows.forEach(row => {
       if (!projects[row.project_id]) {
         projects[row.project_id] = {
           id: row.project_id,
           name: row.project_name,
           description: row.description,
-          materials: [],
+          materials: []
         };
       }
 
@@ -46,14 +52,16 @@ export const getProjects = async (req, res) => {
         projects[row.project_id].materials.push({
           id: row.material_id,
           name: row.material_name,
-          quantity: row.quantity,
-          unit: row.unit,
+          quantity: row.assigned_quantity,
+          unit: row.unit
         });
       }
     });
 
     res.json(Object.values(projects));
-  } catch (err) {
+
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error al obtener proyectos" });
   }
 };

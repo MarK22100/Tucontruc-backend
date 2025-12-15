@@ -1,15 +1,15 @@
 import express from "express";
 import {
   createMaterial,
-  getMaterialsByProject,
   updateMaterial,
   deleteMaterial,
+  getMaterials,
 } from "../controllers/material.controller.js";
 
 const router = express.Router();
 
 router.post("/", createMaterial);
-router.get("/project/:projectId", getMaterialsByProject);
+router.get("/list", getMaterials);
 router.put("/:id", updateMaterial);
 router.delete("/:id", deleteMaterial);
 
